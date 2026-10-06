@@ -708,7 +708,7 @@ InspectorDock::InspectorDock(EditorData &p_editor_data) {
 	set_name(TTRC("Inspector"));
 	set_icon_name("AnimationTrackList");
 	set_dock_shortcut(ED_SHORTCUT_AND_COMMAND("docks/open_inspector", TTRC("Open Inspector Dock")));
-	set_default_slot(EditorDock::DOCK_SLOT_RIGHT_UL);
+	set_default_slot(EditorDock::DOCK_SLOT_RIGHT_BL);
 
 	VBoxContainer *main_vb = memnew(VBoxContainer);
 	add_child(main_vb);

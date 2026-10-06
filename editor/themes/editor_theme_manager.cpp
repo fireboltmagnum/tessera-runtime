@@ -296,7 +296,7 @@ EditorThemeManager::ThemeConfiguration EditorThemeManager::_create_theme_config(
 		Color system_accent_color = display_server->get_accent_color();
 
 		if (follow_system_theme) {
-			String dark_theme = "Default";
+			String dark_theme = "Tessera";
 			String light_theme = "Light";
 
 			config.preset = light_theme; // Assume light theme if we can't detect system theme attributes.
@@ -356,6 +356,15 @@ EditorThemeManager::ThemeConfiguration EditorThemeManager::_create_theme_config(
 				preset_accent_color = Color(0.15, 0.55, 0.82);
 				preset_base_color = Color(0.89, 0.86, 0.79);
 				preset_contrast = light_contrast;
+			} else if (config.preset == "Tessera") {
+				// Tessera: neutral dark grays, amber accent, calm icons, small corners (docs/ui-direction.md).
+				preset_accent_color = Color(0.949, 0.647, 0.255);
+				preset_base_color = Color(0.149, 0.161, 0.18);
+				preset_contrast = 0.25;
+				preset_icon_saturation = 1.0;
+				config.corner_radius = 2;
+				EditorSettings::get_singleton()->set_initial_value("interface/theme/corner_radius", config.corner_radius);
+				EditorSettings::get_singleton()->set_manually("interface/theme/corner_radius", config.corner_radius);
 			} else { // Default
 				preset_accent_color = Color(0.337, 0.62, 1.0);
 				preset_base_color = Color(0.161, 0.161, 0.161);
