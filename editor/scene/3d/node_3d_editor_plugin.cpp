@@ -10230,6 +10230,11 @@ void Node3DEditor::_preview_settings_changed() {
 		environment->set_glow_enabled(environ_glow_button->is_pressed());
 		environment->set_sdfgi_enabled(environ_gi_button->is_pressed());
 		environment->set_tonemapper(environ_tonemap_button->is_pressed() ? Environment::TONE_MAPPER_FILMIC : Environment::TONE_MAPPER_LINEAR);
+		// Tessera: soft studio fill light for Material Preview. The gray sky alone lights objects too dimly;
+		// mixing in a light-gray ambient color brightens them without changing the background.
+		environment->set_ambient_light_color(Color(0.72, 0.73, 0.76));
+		environment->set_ambient_light_sky_contribution(0.35);
+		environment->set_ambient_light_energy(1.0);
 	}
 }
 
