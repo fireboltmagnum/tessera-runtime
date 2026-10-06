@@ -189,12 +189,16 @@ void EditorMainScreen::select(int p_index) {
 		return;
 	}
 
-	if (selected_plugin) {
+	// Tessera: with areas, several main editors are visible at once, so selecting one
+	// must not hide the others. Areas call make_visible() when they show or drop an editor.
+	if (selected_plugin && !area_managed) {
 		selected_plugin->make_visible(false);
 	}
 
 	selected_plugin = new_editor;
-	selected_plugin->make_visible(true);
+	if (!area_managed) {
+		selected_plugin->make_visible(true);
+	}
 	selected_plugin->selected_notify();
 	set_accessibility_name(selected_plugin->get_plugin_name());
 

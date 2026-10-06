@@ -3883,12 +3883,15 @@ void Node3DEditorViewport::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_ENTER_TREE: {
-			surface->connect(SceneStringName(draw), callable_mp(this, &Node3DEditorViewport::_draw));
-			surface->connect(SceneStringName(gui_input), callable_mp(this, &Node3DEditorViewport::_sinput));
-			surface->connect(SceneStringName(mouse_entered), callable_mp(this, &Node3DEditorViewport::_surface_mouse_enter));
-			surface->connect(SceneStringName(mouse_exited), callable_mp(this, &Node3DEditorViewport::_surface_mouse_exit));
-			surface->connect(SceneStringName(focus_entered), callable_mp(this, &Node3DEditorViewport::_surface_focus_enter));
-			surface->connect(SceneStringName(focus_exited), callable_mp(this, &Node3DEditorViewport::_surface_focus_exit));
+			// Tessera: the viewport can leave and re-enter the tree when its area moves; connect once.
+			if (!surface->is_connected(SceneStringName(draw), callable_mp(this, &Node3DEditorViewport::_draw))) {
+				surface->connect(SceneStringName(draw), callable_mp(this, &Node3DEditorViewport::_draw));
+				surface->connect(SceneStringName(gui_input), callable_mp(this, &Node3DEditorViewport::_sinput));
+				surface->connect(SceneStringName(mouse_entered), callable_mp(this, &Node3DEditorViewport::_surface_mouse_enter));
+				surface->connect(SceneStringName(mouse_exited), callable_mp(this, &Node3DEditorViewport::_surface_mouse_exit));
+				surface->connect(SceneStringName(focus_entered), callable_mp(this, &Node3DEditorViewport::_surface_focus_enter));
+				surface->connect(SceneStringName(focus_exited), callable_mp(this, &Node3DEditorViewport::_surface_focus_exit));
+			}
 
 			_init_gizmo_instance(index);
 		} break;
@@ -9703,7 +9706,11 @@ void Node3DEditor::_notification(int p_what) {
 
 		case NOTIFICATION_ENTER_TREE: {
 			_update_theme();
-			_register_all_gizmos();
+			// Tessera: the editor can move between areas (leave and re-enter the tree); register once.
+			if (!gizmos_registered) {
+				_register_all_gizmos();
+				gizmos_registered = true;
+			}
 			_init_indicators();
 			update_all_gizmos();
 		} break;

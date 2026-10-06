@@ -938,6 +938,9 @@ protected:
 	static void _bind_methods();
 
 public:
+	bool gizmos_registered = false; // Tessera: see NOTIFICATION_ENTER_TREE.
+
+public:
 	static Node3DEditor *get_singleton() { return singleton; }
 
 	static Size2i get_camera_viewport_size(Camera3D *p_camera);

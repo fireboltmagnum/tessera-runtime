@@ -755,6 +755,10 @@ public:
 	static DockSplitContainer *get_center_split() { return singleton->center_split; }
 	static EditorBottomPanel *get_bottom_panel() { return singleton->bottom_panel; }
 	static EditorMainScreen *get_editor_main_screen() { return singleton->editor_main_screen; }
+	// Tessera area system: access to the top-level layout it replaces.
+	static VBoxContainer *get_main_vbox() { return singleton->main_vbox; }
+	static EditorSceneTabs *get_scene_tabs() { return singleton->scene_tabs; }
+	static HBoxContainer *get_title_left_spacer() { return singleton->left_spacer; }
 
 	static Button *get_distraction_free_button() { return singleton->distraction_free; }
 

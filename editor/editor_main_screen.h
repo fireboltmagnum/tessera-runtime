@@ -58,6 +58,7 @@ private:
 	Vector<Button *> buttons;
 	Vector<EditorPlugin *> editor_table;
 	HashMap<String, EditorPlugin *> main_editor_plugins;
+	bool area_managed = false; // Tessera: editors live in areas; areas own their visibility.
 
 	int _get_current_main_editor() const;
 
@@ -66,6 +67,8 @@ protected:
 
 public:
 	void set_button_container(HBoxContainer *p_button_hb);
+	void set_area_managed(bool p_managed) { area_managed = p_managed; }
+	bool is_area_managed() const { return area_managed; }
 
 	void save_layout_to_config(Ref<ConfigFile> p_config_file, const String &p_section) const;
 	void load_layout_from_config(Ref<ConfigFile> p_config_file, const String &p_section);
