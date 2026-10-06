@@ -652,7 +652,15 @@ float Node3DEditorViewport::get_zfar() const {
 }
 
 float Node3DEditorViewport::get_fov() const {
-	return CLAMP(spatial_editor->get_fov() * view_3d_controller->cursor.fov_scale, MIN_FOV, MAX_FOV);
+	float fov = spatial_editor->get_fov() * view_3d_controller->cursor.fov_scale;
+	// Tessera: like Blender, the field of view applies to the longer side of the viewport.
+	// Godot applies it vertically, which turns wide areas into an extreme wide angle that
+	// stretches and tilts shapes near the edges. Everything here uses vertical FOV, so convert.
+	const Size2 size = get_size();
+	if (size.x > size.y && size.y > 0) {
+		fov = Math::rad_to_deg(2.0 * Math::atan(Math::tan(Math::deg_to_rad(fov) * 0.5) * size.y / size.x));
+	}
+	return CLAMP(fov, MIN_FOV, MAX_FOV);
 }
 
 Transform3D Node3DEditorViewport::_get_camera_transform() const {

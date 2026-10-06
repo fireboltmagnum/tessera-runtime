@@ -361,7 +361,7 @@ EditorThemeManager::ThemeConfiguration EditorThemeManager::_create_theme_config(
 				preset_accent_color = Color(0.949, 0.647, 0.255);
 				preset_base_color = Color(0.149, 0.161, 0.18);
 				preset_contrast = 0.25;
-				preset_icon_saturation = 1.0;
+				preset_icon_saturation = 0.0; // Monochrome icons, as in Blender.
 				config.corner_radius = 2;
 				EditorSettings::get_singleton()->set_initial_value("interface/theme/corner_radius", config.corner_radius);
 				EditorSettings::get_singleton()->set_manually("interface/theme/corner_radius", config.corner_radius);
