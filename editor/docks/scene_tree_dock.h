@@ -50,6 +50,7 @@ class VBoxContainer;
 
 class SceneTreeDock : public EditorDock {
 	GDCLASS(SceneTreeDock, EditorDock);
+	friend class TesseraViewportHeader; // Tessera: Object menu (duplicate, delete).
 
 	enum Tool {
 		TOOL_NEW,

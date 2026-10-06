@@ -113,6 +113,7 @@ public:
 class Node3DEditorViewport : public Control {
 	GDCLASS(Node3DEditorViewport, Control);
 	friend class Node3DEditor;
+	friend class TesseraViewportHeader; // Tessera: Blender-style area header drives the view menus.
 	friend class ViewportNavigationControl;
 	friend class ViewportRotationControl;
 	enum {
@@ -603,6 +604,7 @@ public:
 
 class Node3DEditor : public VBoxContainer {
 	GDCLASS(Node3DEditor, VBoxContainer);
+	friend class TesseraViewportHeader; // Tessera: Blender-style area header replaces the toolbar.
 
 public:
 	static const unsigned int VIEWPORTS_COUNT = 4;
