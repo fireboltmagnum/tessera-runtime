@@ -342,6 +342,7 @@ private:
 	void _draw_minimap_connection_line(const Vector2 &p_from_graph_position, const Vector2 &p_to_graph_position, const Color &p_from_color, const Color &p_to_color);
 	void _invalidate_connection_line_cache();
 	void _update_top_connection_layer();
+	HashMap<int, float> connection_type_width_scale; // Tessera, see set_connection_type_width_scale().
 	void _update_connections();
 
 	void _top_layer_draw();
@@ -521,6 +522,8 @@ public:
 
 	void set_connection_lines_thickness(float p_thickness);
 	float get_connection_lines_thickness() const;
+	// Tessera: wires leaving ports of p_type are drawn p_scale times as thick (thick flow wires).
+	void set_connection_type_width_scale(int p_type, float p_scale);
 
 	void set_connection_lines_antialiased(bool p_antialiased);
 	bool is_connection_lines_antialiased() const;

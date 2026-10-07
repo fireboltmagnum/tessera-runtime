@@ -1701,6 +1701,15 @@ void GraphEdit::_update_connections() {
 		Ref<Gradient> line_gradient = memnew(Gradient);
 
 		float line_width = _get_shader_line_width();
+		if (!connection_type_width_scale.is_empty()) {
+			GraphNode *from_node = Object::cast_to<GraphNode>(get_node_or_null(NodePath(conn->from_node)));
+			if (from_node && conn->from_port < from_node->get_output_port_count()) {
+				const float *scale = connection_type_width_scale.getptr(from_node->get_output_port_type(conn->from_port));
+				if (scale) {
+					line_width *= *scale;
+				}
+			}
+		}
 		if (conn == hovered_connection) {
 			line_width *= 1.0f + (theme_cache.connection_hover_thickness / 100.0f);
 		}
@@ -2917,6 +2926,12 @@ void GraphEdit::set_connection_lines_thickness(float p_thickness) {
 	lines_thickness = p_thickness;
 	_invalidate_connection_line_cache();
 	connections_layer->queue_redraw();
+	queue_redraw();
+}
+
+void GraphEdit::set_connection_type_width_scale(int p_type, float p_scale) {
+	connection_type_width_scale[p_type] = p_scale;
+	_invalidate_connection_line_cache();
 	queue_redraw();
 }
 
