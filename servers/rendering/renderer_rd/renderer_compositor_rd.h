@@ -118,6 +118,10 @@ protected:
 	float _compute_reference_multiplier(RD::ColorSpace p_color_space, const float p_reference_luminance, const float p_linear_luminance_scale);
 
 public:
+	// Tessera: a module may supply the scene renderer used in place of Mobile. It returns nullptr to
+	// decline, and Mobile is used. See Tessera's docs/forks/runtime-patches.md.
+	static RendererSceneRenderRD *(*tessera_scene_factory)();
+
 	virtual RendererUtilities *get_utilities() override { return utilities; }
 	virtual RendererLightStorage *get_light_storage() override { return light_storage; }
 	virtual RendererMaterialStorage *get_material_storage() override { return material_storage; }

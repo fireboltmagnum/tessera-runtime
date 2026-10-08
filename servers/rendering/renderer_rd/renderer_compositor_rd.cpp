@@ -311,6 +311,7 @@ void RendererCompositorRD::set_boot_image_with_stretch(const Ref<Image> &p_image
 }
 
 RendererCompositorRD *RendererCompositorRD::singleton = nullptr;
+RendererSceneRenderRD *(*RendererCompositorRD::tessera_scene_factory)() = nullptr;
 
 RendererCompositorRD::RendererCompositorRD() {
 	uniform_set_cache = memnew(UniformSetCacheRD);
@@ -377,7 +378,10 @@ RendererCompositorRD::RendererCompositorRD() {
 		if (rendering_method == "forward_plus") {
 			WARN_PRINT_ONCE("Platform supports less than 48 textures per stage which is less than required by the Clustered renderer. Defaulting to Mobile renderer.");
 		}
-		scene = memnew(RendererSceneRenderImplementation::RenderForwardMobile());
+		scene = tessera_scene_factory ? tessera_scene_factory() : nullptr; // Tessera hook.
+		if (!scene) {
+			scene = memnew(RendererSceneRenderImplementation::RenderForwardMobile());
+		}
 	} else if (rendering_method == "forward_plus") {
 		scene = memnew(RendererSceneRenderImplementation::RenderForwardClustered());
 	} else {
