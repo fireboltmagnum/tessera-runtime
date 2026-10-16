@@ -623,6 +623,8 @@ private:
 		uint32_t offset = 0;
 		uint32_t draw_count = 0;
 		uint32_t stride = 0;
+		RDD::BufferID count_buffer; // Tessera hook: if set, draw_count is the most draws.
+		uint32_t count_offset = 0;
 	};
 
 	struct DrawListDrawIndexedIndirectInstruction : DrawListInstruction {
@@ -630,6 +632,8 @@ private:
 		uint32_t offset = 0;
 		uint32_t draw_count = 0;
 		uint32_t stride = 0;
+		RDD::BufferID count_buffer; // Tessera hook.
+		uint32_t count_offset = 0;
 	};
 
 	struct DrawListEndRenderPassInstruction : DrawListInstruction {
@@ -927,8 +931,8 @@ public:
 	void add_draw_list_clear_attachments(VectorView<RDD::AttachmentClear> p_attachments_clear, VectorView<Rect2i> p_attachments_clear_rect);
 	void add_draw_list_draw(uint32_t p_vertex_count, uint32_t p_instance_count);
 	void add_draw_list_draw_indexed(uint32_t p_index_count, uint32_t p_instance_count, uint32_t p_first_index);
-	void add_draw_list_draw_indirect(RDD::BufferID p_buffer, uint32_t p_offset, uint32_t p_draw_count, uint32_t p_stride);
-	void add_draw_list_draw_indexed_indirect(RDD::BufferID p_buffer, uint32_t p_offset, uint32_t p_draw_count, uint32_t p_stride);
+	void add_draw_list_draw_indirect(RDD::BufferID p_buffer, uint32_t p_offset, uint32_t p_draw_count, uint32_t p_stride, RDD::BufferID p_count_buffer = RDD::BufferID(), uint32_t p_count_offset = 0);
+	void add_draw_list_draw_indexed_indirect(RDD::BufferID p_buffer, uint32_t p_offset, uint32_t p_draw_count, uint32_t p_stride, RDD::BufferID p_count_buffer = RDD::BufferID(), uint32_t p_count_offset = 0);
 	void add_draw_list_execute_commands(RDD::CommandBufferID p_command_buffer);
 	void add_draw_list_next_subpass(RDD::CommandBufferType p_command_buffer_type);
 	void add_draw_list_set_blend_constants(const Color &p_color);

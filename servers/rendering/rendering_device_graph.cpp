@@ -973,12 +973,20 @@ void RenderingDeviceGraph::_run_draw_list_command(RDD::CommandBufferID p_command
 			} break;
 			case DrawListInstruction::TYPE_DRAW_INDIRECT: {
 				const DrawListDrawIndirectInstruction *draw_indirect_instruction = reinterpret_cast<const DrawListDrawIndirectInstruction *>(instruction);
-				driver->command_render_draw_indirect(p_command_buffer, draw_indirect_instruction->buffer, draw_indirect_instruction->offset, draw_indirect_instruction->draw_count, draw_indirect_instruction->stride);
+				if (draw_indirect_instruction->count_buffer.id) { // Tessera hook.
+					driver->command_render_draw_indirect_count(p_command_buffer, draw_indirect_instruction->buffer, draw_indirect_instruction->offset, draw_indirect_instruction->count_buffer, draw_indirect_instruction->count_offset, draw_indirect_instruction->draw_count, draw_indirect_instruction->stride);
+				} else {
+					driver->command_render_draw_indirect(p_command_buffer, draw_indirect_instruction->buffer, draw_indirect_instruction->offset, draw_indirect_instruction->draw_count, draw_indirect_instruction->stride);
+				}
 				instruction_data_cursor += sizeof(DrawListDrawIndirectInstruction);
 			} break;
 			case DrawListInstruction::TYPE_DRAW_INDEXED_INDIRECT: {
 				const DrawListDrawIndexedIndirectInstruction *draw_indexed_indirect_instruction = reinterpret_cast<const DrawListDrawIndexedIndirectInstruction *>(instruction);
-				driver->command_render_draw_indexed_indirect(p_command_buffer, draw_indexed_indirect_instruction->buffer, draw_indexed_indirect_instruction->offset, draw_indexed_indirect_instruction->draw_count, draw_indexed_indirect_instruction->stride);
+				if (draw_indexed_indirect_instruction->count_buffer.id) { // Tessera hook.
+					driver->command_render_draw_indexed_indirect_count(p_command_buffer, draw_indexed_indirect_instruction->buffer, draw_indexed_indirect_instruction->offset, draw_indexed_indirect_instruction->count_buffer, draw_indexed_indirect_instruction->count_offset, draw_indexed_indirect_instruction->draw_count, draw_indexed_indirect_instruction->stride);
+				} else {
+					driver->command_render_draw_indexed_indirect(p_command_buffer, draw_indexed_indirect_instruction->buffer, draw_indexed_indirect_instruction->offset, draw_indexed_indirect_instruction->draw_count, draw_indexed_indirect_instruction->stride);
+				}
 				instruction_data_cursor += sizeof(DrawListDrawIndexedIndirectInstruction);
 			} break;
 			case DrawListInstruction::TYPE_EXECUTE_COMMANDS: {
@@ -2224,23 +2232,27 @@ void RenderingDeviceGraph::add_draw_list_draw_indexed(uint32_t p_index_count, ui
 	instruction->first_index = p_first_index;
 }
 
-void RenderingDeviceGraph::add_draw_list_draw_indirect(RDD::BufferID p_buffer, uint32_t p_offset, uint32_t p_draw_count, uint32_t p_stride) {
+void RenderingDeviceGraph::add_draw_list_draw_indirect(RDD::BufferID p_buffer, uint32_t p_offset, uint32_t p_draw_count, uint32_t p_stride, RDD::BufferID p_count_buffer, uint32_t p_count_offset) {
 	DrawListDrawIndirectInstruction *instruction = reinterpret_cast<DrawListDrawIndirectInstruction *>(_allocate_draw_list_instruction(sizeof(DrawListDrawIndirectInstruction)));
 	instruction->type = DrawListInstruction::TYPE_DRAW_INDIRECT;
 	instruction->buffer = p_buffer;
 	instruction->offset = p_offset;
 	instruction->draw_count = p_draw_count;
 	instruction->stride = p_stride;
+	instruction->count_buffer = p_count_buffer;
+	instruction->count_offset = p_count_offset;
 	draw_instruction_list.stages.set_flag(RDD::PIPELINE_STAGE_DRAW_INDIRECT_BIT);
 }
 
-void RenderingDeviceGraph::add_draw_list_draw_indexed_indirect(RDD::BufferID p_buffer, uint32_t p_offset, uint32_t p_draw_count, uint32_t p_stride) {
+void RenderingDeviceGraph::add_draw_list_draw_indexed_indirect(RDD::BufferID p_buffer, uint32_t p_offset, uint32_t p_draw_count, uint32_t p_stride, RDD::BufferID p_count_buffer, uint32_t p_count_offset) {
 	DrawListDrawIndexedIndirectInstruction *instruction = reinterpret_cast<DrawListDrawIndexedIndirectInstruction *>(_allocate_draw_list_instruction(sizeof(DrawListDrawIndexedIndirectInstruction)));
 	instruction->type = DrawListInstruction::TYPE_DRAW_INDEXED_INDIRECT;
 	instruction->buffer = p_buffer;
 	instruction->offset = p_offset;
 	instruction->draw_count = p_draw_count;
 	instruction->stride = p_stride;
+	instruction->count_buffer = p_count_buffer;
+	instruction->count_offset = p_count_offset;
 	draw_instruction_list.stages.set_flag(RDD::PIPELINE_STAGE_DRAW_INDIRECT_BIT);
 }
 

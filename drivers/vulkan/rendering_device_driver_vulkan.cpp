@@ -586,6 +586,8 @@ Error RenderingDeviceDriverVulkan::_initialize_device_extensions() {
 	_register_requested_device_extension(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME, false);
 	_register_requested_device_extension(VK_NV_RAY_TRACING_VALIDATION_EXTENSION_NAME, false);
 	_register_requested_device_extension(VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME, false);
+	// Tessera hook: GPU-driven draws take their count from a buffer.
+	_register_requested_device_extension(VK_KHR_DRAW_INDIRECT_COUNT_EXTENSION_NAME, false);
 
 	// We don't actually use this extension, but some runtime components on some platforms
 	// can and will fill the validation layers with useless info otherwise if not enabled.
@@ -5750,7 +5752,8 @@ void RenderingDeviceDriverVulkan::command_render_draw_indexed_indirect_count(Com
 	const CommandBufferInfo *command_buffer = (const CommandBufferInfo *)p_cmd_buffer.id;
 	const BufferInfo *indirect_buf_info = (const BufferInfo *)p_indirect_buffer.id;
 	const BufferInfo *count_buf_info = (const BufferInfo *)p_count_buffer.id;
-	vkCmdDrawIndexedIndirectCount(command_buffer->vk_command_buffer, indirect_buf_info->vk_buffer, p_offset, count_buf_info->vk_buffer, p_count_buffer_offset, p_max_draw_count, p_stride);
+	// Tessera hook: the extension's entry point (SUPPORTS_DRAW_INDIRECT_COUNT).
+	(vkCmdDrawIndexedIndirectCountKHR ? vkCmdDrawIndexedIndirectCountKHR : vkCmdDrawIndexedIndirectCount)(command_buffer->vk_command_buffer, indirect_buf_info->vk_buffer, p_offset, count_buf_info->vk_buffer, p_count_buffer_offset, p_max_draw_count, p_stride);
 }
 
 void RenderingDeviceDriverVulkan::command_render_draw_indirect(CommandBufferID p_cmd_buffer, BufferID p_indirect_buffer, uint64_t p_offset, uint32_t p_draw_count, uint32_t p_stride) {
@@ -5763,7 +5766,7 @@ void RenderingDeviceDriverVulkan::command_render_draw_indirect_count(CommandBuff
 	const CommandBufferInfo *command_buffer = (const CommandBufferInfo *)p_cmd_buffer.id;
 	const BufferInfo *indirect_buf_info = (const BufferInfo *)p_indirect_buffer.id;
 	const BufferInfo *count_buf_info = (const BufferInfo *)p_count_buffer.id;
-	vkCmdDrawIndirectCount(command_buffer->vk_command_buffer, indirect_buf_info->vk_buffer, p_offset, count_buf_info->vk_buffer, p_count_buffer_offset, p_max_draw_count, p_stride);
+	(vkCmdDrawIndirectCountKHR ? vkCmdDrawIndirectCountKHR : vkCmdDrawIndirectCount)(command_buffer->vk_command_buffer, indirect_buf_info->vk_buffer, p_offset, count_buf_info->vk_buffer, p_count_buffer_offset, p_max_draw_count, p_stride);
 }
 
 void RenderingDeviceDriverVulkan::command_render_bind_vertex_buffers(CommandBufferID p_cmd_buffer, uint32_t p_binding_count, const BufferID *p_buffers, const uint64_t *p_offsets, uint64_t p_dynamic_offsets) {
@@ -7392,6 +7395,8 @@ bool RenderingDeviceDriverVulkan::has_feature(Features p_feature) {
 			return true;
 		case SUPPORTS_BUFFER_DEVICE_ADDRESS:
 			return buffer_device_address_support;
+		case SUPPORTS_DRAW_INDIRECT_COUNT: // Tessera hook.
+			return enabled_device_extension_names.has(VK_KHR_DRAW_INDIRECT_COUNT_EXTENSION_NAME);
 		case SUPPORTS_IMAGE_ATOMIC_32_BIT:
 #if (defined(MACOS_ENABLED) || defined(APPLE_EMBEDDED_ENABLED))
 			// MoltenVK has previously had issues with 32-bit atomics on images.

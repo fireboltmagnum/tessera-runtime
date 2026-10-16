@@ -1036,6 +1036,7 @@ public:
 		SUPPORTS_RAY_QUERY,
 		SUPPORTS_RAYTRACING_PIPELINE,
 		SUPPORTS_HDR_OUTPUT,
+		SUPPORTS_DRAW_INDIRECT_COUNT, // Tessera hook: draw_list_draw_indirect() with a count buffer.
 	};
 
 	enum SubgroupOperations {

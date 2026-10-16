@@ -6156,13 +6156,24 @@ void RenderingDevice::draw_list_draw(DrawListID p_list, bool p_use_indices, uint
 	draw_list.state.draw_count++;
 }
 
-void RenderingDevice::draw_list_draw_indirect(DrawListID p_list, bool p_use_indices, RID p_buffer, uint32_t p_offset, uint32_t p_draw_count, uint32_t p_stride) {
+void RenderingDevice::draw_list_draw_indirect(DrawListID p_list, bool p_use_indices, RID p_buffer, uint32_t p_offset, uint32_t p_draw_count, uint32_t p_stride, RID p_count_buffer, uint32_t p_count_buffer_offset) {
 	ERR_RENDER_THREAD_GUARD();
 
 	ERR_FAIL_COND(!draw_list.active);
 
 	Buffer *buffer = storage_buffer_owner.get_or_null(p_buffer);
 	ERR_FAIL_NULL(buffer);
+
+	// Tessera hook: the draw count from a buffer.
+	Buffer *count_buffer = nullptr;
+	if (p_count_buffer.is_valid()) {
+		ERR_FAIL_COND_MSG(!driver->has_feature(SUPPORTS_DRAW_INDIRECT_COUNT), "Indirect draws with a count buffer are not supported on this device.");
+		count_buffer = storage_buffer_owner.get_or_null(p_count_buffer);
+		ERR_FAIL_NULL(count_buffer);
+		ERR_FAIL_COND_MSG(!count_buffer->usage.has_flag(RDD::BUFFER_USAGE_INDIRECT_BIT), "Count buffer was not created to do indirect dispatch.");
+		ERR_FAIL_COND_MSG(p_count_buffer_offset + 4 > count_buffer->size, "Count buffer offset (+4) is past the end of buffer.");
+	}
+	const RDD::BufferID count_id = count_buffer ? count_buffer->driver_id : RDD::BufferID();
 
 	ERR_FAIL_COND_MSG(!buffer->usage.has_flag(RDD::BUFFER_USAGE_INDIRECT_BIT), "Buffer provided was not created to do indirect dispatch.");
 
@@ -6249,11 +6260,11 @@ void RenderingDevice::draw_list_draw_indirect(DrawListID p_list, bool p_use_indi
 
 		ERR_FAIL_COND_MSG(p_offset + 20 > buffer->size, "Offset provided (+20) is past the end of buffer.");
 
-		draw_graph.add_draw_list_draw_indexed_indirect(buffer->driver_id, p_offset, p_draw_count, p_stride);
+		draw_graph.add_draw_list_draw_indexed_indirect(buffer->driver_id, p_offset, p_draw_count, p_stride, count_id, p_count_buffer_offset);
 	} else {
 		ERR_FAIL_COND_MSG(p_offset + 16 > buffer->size, "Offset provided (+16) is past the end of buffer.");
 
-		draw_graph.add_draw_list_draw_indirect(buffer->driver_id, p_offset, p_draw_count, p_stride);
+		draw_graph.add_draw_list_draw_indirect(buffer->driver_id, p_offset, p_draw_count, p_stride, count_id, p_count_buffer_offset);
 	}
 
 	draw_list.state.draw_count++;
@@ -6261,8 +6272,14 @@ void RenderingDevice::draw_list_draw_indirect(DrawListID p_list, bool p_use_indi
 	if (buffer->draw_tracker != nullptr) {
 		draw_graph.add_draw_list_usage(buffer->draw_tracker, RDG::RESOURCE_USAGE_INDIRECT_BUFFER_READ);
 	}
+	if (count_buffer && count_buffer != buffer && count_buffer->draw_tracker != nullptr) {
+		draw_graph.add_draw_list_usage(count_buffer->draw_tracker, RDG::RESOURCE_USAGE_INDIRECT_BUFFER_READ);
+	}
 
 	_check_transfer_worker_buffer(buffer);
+	if (count_buffer) {
+		_check_transfer_worker_buffer(count_buffer);
+	}
 }
 
 void RenderingDevice::draw_list_set_viewport(DrawListID p_list, const Rect2 &p_rect) {
@@ -9159,7 +9176,7 @@ void RenderingDevice::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("draw_list_set_push_constant", "draw_list", "buffer", "size_bytes"), &RenderingDevice::_draw_list_set_push_constant);
 
 	ClassDB::bind_method(D_METHOD("draw_list_draw", "draw_list", "use_indices", "instances", "procedural_vertex_count"), &RenderingDevice::draw_list_draw, DEFVAL(0));
-	ClassDB::bind_method(D_METHOD("draw_list_draw_indirect", "draw_list", "use_indices", "buffer", "offset", "draw_count", "stride"), &RenderingDevice::draw_list_draw_indirect, DEFVAL(0), DEFVAL(1), DEFVAL(0));
+	ClassDB::bind_method(D_METHOD("draw_list_draw_indirect", "draw_list", "use_indices", "buffer", "offset", "draw_count", "stride", "count_buffer", "count_buffer_offset"), &RenderingDevice::draw_list_draw_indirect, DEFVAL(0), DEFVAL(1), DEFVAL(0), DEFVAL(RID()), DEFVAL(0));
 
 	ClassDB::bind_method(D_METHOD("draw_list_enable_scissor", "draw_list", "rect"), &RenderingDevice::draw_list_enable_scissor, DEFVAL(Rect2()));
 	ClassDB::bind_method(D_METHOD("draw_list_disable_scissor", "draw_list"), &RenderingDevice::draw_list_disable_scissor);
@@ -9770,6 +9787,7 @@ void RenderingDevice::_bind_methods() {
 	BIND_ENUM_CONSTANT(SUPPORTS_RAY_QUERY);
 	BIND_ENUM_CONSTANT(SUPPORTS_RAYTRACING_PIPELINE);
 	BIND_ENUM_CONSTANT(SUPPORTS_HDR_OUTPUT);
+	BIND_ENUM_CONSTANT(SUPPORTS_DRAW_INDIRECT_COUNT); // Tessera hook.
 
 	BIND_ENUM_CONSTANT(LIMIT_MAX_BOUND_UNIFORM_SETS);
 	BIND_ENUM_CONSTANT(LIMIT_MAX_FRAMEBUFFER_COLOR_ATTACHMENTS);
